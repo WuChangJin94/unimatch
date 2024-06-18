@@ -654,6 +654,7 @@ def inference_flow(model,
                    pred_bidir_flow=False,
                    pred_bwd_flow=False,
                    fwd_bwd_consistency_check=False,
+                   save_img=False,
                    save_video=False,
                    concat_flow_img=False,
                    ):
@@ -668,12 +669,12 @@ def inference_flow(model,
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    if save_video:
+    if save_img or save_video:
         assert inference_video is not None
 
     fixed_inference_size = inference_size
     transpose_img = False
-
+    
     if inference_video is not None:
         filenames, fps = extract_video(inference_video)  # list of [H, W, 3]
     else:
@@ -684,8 +685,8 @@ def inference_flow(model,
     ori_imgs = []
 
     for test_id in range(0, len(filenames) - 1):
-        if (test_id + 1) % 50 == 0:
-            print('predicting %d/%d' % (test_id + 1, len(filenames)))
+        #     if (test_id + 1) % 50 == 0:
+        print('predicting %d/%d' % (test_id + 1, len(filenames)))
 
         if inference_video is not None:
             image1 = filenames[test_id]
@@ -810,6 +811,20 @@ def inference_flow(model,
                 else:
                     output_file_bwd = os.path.join(output_path, os.path.basename(filenames[test_id])[:-4] + '_pred_bwd.flo')
                 frame_utils.writeFlow(output_file_bwd, flow_bwd)
+    
+    if save_img:
+        surffix = '_flow_concat.png' if concat_flow_img else '_flow.png'
+        if concat_flow_img:
+            assert len(ori_imgs) == len(vis_flow_preds)
+            concat_axis = 0 if ori_imgs[0].shape[0] < ori_imgs[0].shape[1] else 1
+            for idx, (i, flow) in enumerate(zip(ori_imgs, vis_flow_preds)):
+                concat = np.concatenate((i, flow), axis=concat_axis)
+                output_file = os.path.join(output_path, str(idx) + surffix)
+                imageio.imwrite(output_file, concat)
+        else:
+            for idx, flow in enumerate(vis_flow_preds):
+                output_file = os.path.join(output_path, str(idx) + surffix)
+                imageio.imwrite(output_file, flow)
 
     if save_video:
         suffix = '_flow_img.mp4' if concat_flow_img else '_flow.mp4'
@@ -828,4 +843,6 @@ def inference_flow(model,
 
         imageio.mimwrite(output_file, results, fps=fps, quality=8)
 
+
+    
     print('Done!')

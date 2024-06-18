@@ -116,6 +116,7 @@ def get_args_parser():
                         help='predict backward flow only')
     parser.add_argument('--fwd_bwd_check', action='store_true',
                         help='forward backward consistency check with bidirection flow')
+    parser.add_argument('--save_img', action='store_true')
     parser.add_argument('--save_video', action='store_true')
     parser.add_argument('--concat_flow_img', action='store_true')
 
@@ -363,6 +364,7 @@ def main(args):
                        pred_bwd_flow=args.pred_bwd_flow,
                        num_reg_refine=args.num_reg_refine,
                        fwd_bwd_consistency_check=args.fwd_bwd_check,
+                       save_img=args.save_img,
                        save_video=args.save_video,
                        concat_flow_img=args.concat_flow_img,
                        )
